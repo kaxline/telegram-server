@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var logger = require('nlogger').logger(module);
 
 var posts = [
   {
@@ -53,7 +54,7 @@ module.exports = {
 
   createPost: function (req, res) {
     var newPost = req.body.post;
-    console.log(newPost);
+    logger.info(newPost);
     res.sendStatus(200);
   }
 }

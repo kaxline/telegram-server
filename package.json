@@ -7,6 +7,7 @@
     "body-parser": "^1.10.0",
     "express": "4.x",
     "lodash": "^2.4.1",
-    "multer": "^0.1.6"
+    "multer": "^0.1.6",
+    "nlogger": "^0.4.0"
   }
 }
