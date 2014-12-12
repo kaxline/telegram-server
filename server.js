@@ -15,7 +15,7 @@ app.use(function (req, res, next) {
 });
 
 app.use(function (req, res, next) {
-  logger.info(req.path);
+  logger.info(req.method, ' - ', req.path);
   next();
 });
 
