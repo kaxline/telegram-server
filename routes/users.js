@@ -27,18 +27,19 @@ var users = [
 module.exports = {
 
   findAll: function (req, res) {
-    console.log('users');
-    res.json(users);
+    var response = {
+      users: users
+    }
+    res.json(response);
   },
 
   findById: function (req, res) {
-    var userShortname = req.params.user_shortname;
-    var foundUser = _.where(users, {id: userShortname})[0];
-    var test = {
+    var userId = req.params.user_id;
+    var foundUser = _.where(users, {id: userId})[0];
+    var response = {
       user: foundUser
     };
-    console.log(foundUser);
-    res.json(test);
+    res.json(response);
   }
 
 }

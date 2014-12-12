@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 var posts = [
   {
     id: 4,
@@ -34,7 +36,24 @@ var posts = [
 module.exports = {
 
   findAll: function (req, res) {
-    console.log('posts');
-    res.send(posts);
+    var response = {
+      posts: posts
+    }
+    res.send(response);
+  },
+
+  findById: function (req, res) {
+    var postId = parseInt(req.params.post_id);
+    var foundPost = _.where(posts, {id: postId});
+    var response = {
+      post: foundPost
+    };
+    res.json(response);
+  },
+
+  createPost: function (req, res) {
+    var newPost = req.body.post;
+    console.log(newPost);
+    res.sendStatus(200);
   }
 }
