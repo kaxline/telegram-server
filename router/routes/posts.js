@@ -1,3 +1,5 @@
+var express = require('express');
+var router = express.Router();
 var _ = require('lodash');
 var logger = require('nlogger').logger(module);
 
@@ -34,27 +36,29 @@ var posts = [
   }
 ];
 
-module.exports = {
-
-  findAll: function (req, res) {
-    var response = {
-      posts: posts
-    }
-    res.send(response);
-  },
-
-  findById: function (req, res) {
-    var postId = parseInt(req.params.post_id);
-    var foundPost = _.where(posts, {id: postId});
-    var response = {
-      post: foundPost
-    };
-    res.json(response);
-  },
-
-  createPost: function (req, res) {
-    var newPost = req.body.post;
-    logger.info(newPost);
-    res.sendStatus(200);
+router.get('/', function (req, res) {
+  var response = {
+    posts: posts
   }
-}
+  res.send(response);
+});
+
+router.get('/:post_id', function (req, res) {
+  var postId = parseInt(req.params.post_id);
+  logger.info('post id is ', postId);
+  var foundPost = _.where(posts, {id: postId});
+  var response = {
+    post: foundPost
+  };
+  res.json(response);
+});
+
+router.post('/', function (req, res) {
+  var newPost = req.body.post;
+  newPost.id = parseInt(newPost.id);
+  posts = posts.push(newPost);
+  logger.info(newPost);
+  res.sendStatus(200);
+});
+
+module.exports = router;

@@ -1,4 +1,7 @@
+var express = require('express');
+var router = express.Router();
 var _ = require('lodash');
+var logger = require('nlogger').logger(module);
 
 var users = [
   {
@@ -24,22 +27,20 @@ var users = [
   }
 ];
 
-module.exports = {
+router.get('/', function (req, res) {
+  var response = {
+    users: users
+  };
+  res.json(response);
+});
 
-  findAll: function (req, res) {
-    var response = {
-      users: users
-    }
-    res.json(response);
-  },
+router.get('/:user_id', function (req, res) {
+  var userId = req.params.user_id;
+  var foundUser = _.where(users, {id: userId})[0];
+  var response = {
+    user: foundUser
+  };
+  res.json(response);
+});
 
-  findById: function (req, res) {
-    var userId = req.params.user_id;
-    var foundUser = _.where(users, {id: userId})[0];
-    var response = {
-      user: foundUser
-    };
-    res.json(response);
-  }
-
-}
+module.exports = router;
