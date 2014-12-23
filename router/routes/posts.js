@@ -55,10 +55,12 @@ router.get('/:post_id', function (req, res) {
 
 router.post('/', function (req, res) {
   var newPost = req.body.post;
-  newPost.id = parseInt(newPost.id);
-  posts = posts.push(newPost);
-  logger.info(newPost);
-  res.sendStatus(200);
+  newPost.id = posts.length + 5;
+  posts.push(newPost);
+  var newPostResponse = {
+    post: newPost
+  };
+  res.json(newPostResponse);
 });
 
 module.exports = router;

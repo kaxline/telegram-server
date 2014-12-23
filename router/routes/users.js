@@ -27,11 +27,39 @@ var users = [
   }
 ];
 
+function makeEmberUser (user) {
+  return _.omit(user, ['password', 'email']);
+}
+
 router.get('/', function (req, res) {
-  var response = {
-    users: users
-  };
-  res.json(response);
+  var userId = req.query.userId;
+  var password = req.query.password;
+  if (!userId && !password) {
+    var getUsersResponse = {
+      users: users
+    };
+    res.json(getUsersResponse);
+  }
+  if (!userId) {
+    logger.error('User attempted to login with a password but no username.');
+  }
+  if (!password) {
+    logger.error('User attempted to login with a username but no password.');
+  }
+  var foundUser = _.where(users, {id: userId})[0];
+  logger.info('foundUser.password: ', foundUser);
+  if (foundUser.password === password) {
+    var loginResponse = {
+      users: [makeEmberUser(foundUser)]
+    };
+    res.json(loginResponse);
+  } else {
+    res.json({
+      errors: {
+        password: ['Invalid password']
+      }
+    });
+  }
 });
 
 router.get('/:user_id', function (req, res) {
@@ -40,7 +68,18 @@ router.get('/:user_id', function (req, res) {
   var response = {
     user: foundUser
   };
+  logger.info(foundUser);
   res.json(response);
+});
+
+router.post('/', function (req, res) {
+  var newUser = req.body.user;
+  logger.info(req.body.user);
+  users = users.push(newUser);
+  newUserResponse = {
+    users: [makeEmberUser(newUser)]
+  };
+  res.json(newUserResponse);
 });
 
 module.exports = router;
