@@ -32,6 +32,7 @@ function makeEmberUser (user) {
 }
 
 router.get('/', function (req, res) {
+  // add operational flags for login and get followers
   var userId = req.query.userId;
   var password = req.query.password;
   if (!userId && !password) {
@@ -54,7 +55,8 @@ router.get('/', function (req, res) {
     };
     res.json(loginResponse);
   } else {
-    res.json({
+    // change status to 403 forbidden with sendStatus
+    res.send({
       errors: {
         password: ['Invalid password']
       }
@@ -75,9 +77,9 @@ router.get('/:user_id', function (req, res) {
 router.post('/', function (req, res) {
   var newUser = req.body.user;
   logger.info(req.body.user);
-  users = users.push(newUser);
+  users.push(newUser);
   newUserResponse = {
-    users: [makeEmberUser(newUser)]
+    user: makeEmberUser(newUser)
   };
   res.json(newUserResponse);
 });
