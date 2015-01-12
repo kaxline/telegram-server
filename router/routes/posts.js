@@ -2,39 +2,10 @@ var express = require('express');
 var router = express.Router();
 var _ = require('lodash');
 var logger = require('nlogger').logger(module);
+var posts = require('../../fixture-data/posts');
+var ensureAuthenticated = require('../../utils').ensureAuthenticated;
 
-var posts = [
-  {
-    id: 4,
-    content: 'Body of post 1',
-    author: 'kaxline',
-    createdAt: new Date('01/14/14')
-  },
-  {
-    id: 7,
-    content: 'Bleep blop bloop',
-    author: 'kaxline',
-    createdAt: new Date('11/21/14')
-  },
-  {
-    id: 8,
-    content: 'Some stuff',
-    author: 'kaxline',
-    createdAt: new Date('11/22/14')
-  },
-  {
-    id: 5,
-    content: 'Body of post 2',
-    author: 'jsmith',
-    createdAt: new Date('11/13/14')
-  },
-  {
-    id: 6,
-    content: 'Body of post 3',
-    author: 'sjackson',
-    createdAt: new Date('11/15/14')
-  }
-];
+
 
 router.get('/', function (req, res) {
   var response = {
@@ -53,14 +24,15 @@ router.get('/:post_id', function (req, res) {
   res.json(response);
 });
 
-router.post('/', function (req, res) {
+router.post('/', ensureAuthenticated, function (req, res) {
   var newPost = req.body.post;
+  logger.info(req.body);
   newPost.id = posts.length + 5;
   posts.push(newPost);
   var newPostResponse = {
     post: newPost
   };
-  res.json(newPostResponse);
+  res.jsonp(newPostResponse);
 });
 
 module.exports = router;

@@ -1,72 +1,51 @@
 var express = require('express');
 var router = express.Router();
-var _ = require('lodash');
 var logger = require('nlogger').logger(module);
+var passport = require('passport');
+var users = require('../../fixture-data/users');
+var makeEmberUser = require('../../utils').makeEmberUser;
+var findUserById = require('../../utils').findUserById;
 
-var users = [
-  {
-    id: 'kaxline',
-    name: 'Keith Axline',
-    email: 'kaxline@gmail.com',
-    profileImage: '',
-    password: 'password1'
-  },
-  {
-    id: 'jsmith',
-    name: 'Joe Smith',
-    email: 'joe.smith@gmail.com',
-    profileImage: '',
-    password: 'password1'
-  },
-  {
-    id: 'sjackson',
-    name: 'Sam Jackson',
-    email: 'sam.jackson@gmail.com',
-    profileImage: '',
-    password: 'password1'
-  }
-];
 
-function makeEmberUser (user) {
-  return _.omit(user, ['password', 'email']);
-}
 
-router.get('/', function (req, res) {
-  // add operational flags for login and get followers
-  var userId = req.query.userId;
-  var password = req.query.password;
-  if (!userId && !password) {
+
+router.get('/', function (req, res, next) {
+  var action = req.query.action;
+  if (action === 'login') {
+    // Passport requires req.body to have username and password or else the local strategy is not called.
+    req.body.username = req.query.userId;
+    req.body.password = req.query.password;
+    passport.authenticate('local', function (err, user, info) {
+      logger.info('in passport.authenticate where info: ', info);
+      if (err) {
+        logger.info('in passport.authenticate with err: ', err);
+        res.sendStatus(500);
+        return;
+      }
+      if (!user) {
+        logger.info('in passport.authenticate with !user');
+        res.sendStatus(403);
+        return;
+      }
+      req.login(user, function (err) {
+        if (err) { return next(err) }
+        var loginResponse = {
+          users: [makeEmberUser(user)]
+        };
+        res.json(loginResponse);
+      })
+    })(req, res, next);
+  } else {
     var getUsersResponse = {
       users: users
     };
     res.json(getUsersResponse);
   }
-  if (!userId) {
-    logger.error('User attempted to login with a password but no username.');
-  }
-  if (!password) {
-    logger.error('User attempted to login with a username but no password.');
-  }
-  var foundUser = _.where(users, {id: userId})[0];
-  logger.info('foundUser.password: ', foundUser);
-  if (foundUser.password === password) {
-    var loginResponse = {
-      users: [makeEmberUser(foundUser)]
-    };
-    res.json(loginResponse);
-  } else {
-    // change status to 403 forbidden with sendStatus
-    res.send({
-      errors: {
-        password: ['Invalid password']
-      }
-    });
-  }
 });
 
 router.get('/:user_id', function (req, res) {
   var userId = req.params.user_id;
-  var foundUser = _.where(users, {id: userId})[0];
+  var foundUser = findUserById(userId);
   var response = {
     user: foundUser
   };
