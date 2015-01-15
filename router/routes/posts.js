@@ -21,7 +21,7 @@ router.get('/:post_id', function (req, res) {
   var response = {
     post: foundPost
   };
-  res.json(response);
+  res.send(response);
 });
 
 router.post('/', ensureAuthenticated, function (req, res) {
@@ -32,7 +32,7 @@ router.post('/', ensureAuthenticated, function (req, res) {
   var newPostResponse = {
     post: newPost
   };
-  res.jsonp(newPostResponse);
+  res.send(newPostResponse);
 });
 
 module.exports = router;

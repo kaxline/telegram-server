@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var logger = require('nlogger').logger(module);
-var passport = require('passport');
+var passport = require('../../auth');
 var users = require('../../fixture-data/users');
 var makeEmberUser = require('../../utils').makeEmberUser;
 var findUserById = require('../../utils').findUserById;
@@ -32,14 +32,14 @@ router.get('/', function (req, res, next) {
         var loginResponse = {
           users: [makeEmberUser(user)]
         };
-        res.json(loginResponse);
+        res.send(loginResponse);
       })
     })(req, res, next);
   } else {
     var getUsersResponse = {
       users: users
     };
-    res.json(getUsersResponse);
+    res.send(getUsersResponse);
   }
 });
 
@@ -50,7 +50,7 @@ router.get('/:user_id', function (req, res) {
     user: foundUser
   };
   logger.info(foundUser);
-  res.json(response);
+  res.send(response);
 });
 
 router.post('/', function (req, res) {
@@ -60,7 +60,7 @@ router.post('/', function (req, res) {
   newUserResponse = {
     user: makeEmberUser(newUser)
   };
-  res.json(newUserResponse);
+  res.send(newUserResponse);
 });
 
 module.exports = router;

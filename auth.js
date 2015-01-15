@@ -1,7 +1,7 @@
 var logger = require('nlogger').logger(module);
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
-var findUserById = require('../utils').findUserById;
+var findUserById = require('./utils').findUserById;
 
 // START PASSPORT CONFIG
 
@@ -35,14 +35,4 @@ passport.use(new LocalStrategy(
 
 // END PASSPORT CONFIG
 
-module.exports = function (app) {
-
-  // USERS
-
-  app.use('/api/users', require('./routes/users'));
-
-  // POSTS
-
-  app.use('/api/posts', require('./routes/posts'));
-
-}
+module.exports = passport;
