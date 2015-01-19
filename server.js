@@ -3,8 +3,9 @@ var app = express();
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var cookieParser = require('cookie-parser');
-var logger = require('nlogger').logger(module);
+var logger = require('bunyan').createLogger({name: 'telegram'});
 var passport = require('./auth');
+var db = require('./mongodb');
 
 app.use(bodyParser.json());
 app.use(cookieParser());
@@ -21,13 +22,6 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
-
-
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
 
 app.use(function (req, res, next) {
   logger.info(req.method, ' - ', req.path);

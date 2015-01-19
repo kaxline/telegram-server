@@ -1,34 +1,43 @@
-var logger = require('nlogger').logger(module);
+var logger = require('bunyan').createLogger({name: 'auth.js'});
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
-var findUserById = require('./utils').findUserById;
+var UserProvider = require('./userprovider');
+var userProvider = new UserProvider;
 
 // START PASSPORT CONFIG
 
 passport.serializeUser(function (user, done) {
-  logger.info('in serialize user where user: ', user);
   done(null, user.id);
 });
 
 passport.deserializeUser(function (id, done) {
-  logger.info('in deserialize user where id: ', id);
-  done(null, findUserById(id));
+  userProvider.findById(id, '', function (err, user) {
+    if (!err) {
+      done(null, user);
+    } else {
+      logger.error(err);
+      done(err);
+    }
+  });
 });
 
-passport.use(new LocalStrategy(
+passport.use(new LocalStrategy({
+    usernameField: 'userId'
+  },
   function (username, password, done) {
     logger.info('username: ', username);
     logger.info('password: ', password);
-    var foundUser = findUserById(username);
-    if (foundUser) {
-      if (foundUser.password === password) {
-        return done(null, foundUser);
+    userProvider.findById(username, '', function (err, foundUser) {
+      if (!err) {
+        if (foundUser.password === password) {
+          return done(null, foundUser, {message: 'User found and password matches'});
+        } else {
+          return done(null, false, {message: 'Invalid password.'})
+        }
       } else {
-        return done(null, false, {message: 'Invalid password.'})
+        return done(err, false);
       }
-    } else {
-      return done(null, false, {message: 'No user found with that username.'})
-    }
+    });
   }
 ));
 

@@ -1,20 +1,15 @@
 var express = require('express');
 var router = express.Router();
-var logger = require('nlogger').logger(module);
+var logger = require('bunyan').createLogger({name: 'routes/users.js'});
 var passport = require('../../auth');
-var users = require('../../fixture-data/users');
-var makeEmberUser = require('../../utils').makeEmberUser;
-var findUserById = require('../../utils').findUserById;
-
-
+var utils = require('../../utils');
+var UserProvider = require('../../userprovider');
+var userProvider = new UserProvider;
 
 
 router.get('/', function (req, res, next) {
   var action = req.query.action;
   if (action === 'login') {
-    // Passport requires req.body to have username and password or else the local strategy is not called.
-    req.body.username = req.query.userId;
-    req.body.password = req.query.password;
     passport.authenticate('local', function (err, user, info) {
       logger.info('in passport.authenticate where info: ', info);
       if (err) {
@@ -29,38 +24,64 @@ router.get('/', function (req, res, next) {
       }
       req.login(user, function (err) {
         if (err) { return next(err) }
+        logger.info('req.user: ', req.user);
+        logger.info('req.isAuthenticated: ', req.isAuthenticated());
         var loginResponse = {
-          users: [makeEmberUser(user)]
+          users: [utils.makeEmberUser(user)]
         };
+        logger.info({loginResponse: loginResponse});
         res.send(loginResponse);
       })
     })(req, res, next);
+  } else if (req.query.isAuthenticated === 'true') {
+    var isAuthenticatedResponse = {};
+    isAuthenticatedResponse.users = (req.isAuthenticated()) ? [utils.makeEmberUser(req.user)] : [];
+    res.send(isAuthenticatedResponse);
   } else {
-    var getUsersResponse = {
-      users: users
-    };
-    res.send(getUsersResponse);
+    userProvider.findAll('name id profileImage', function (err, users) {
+      if (!err) {
+        var getUsersResponse = {
+          users: users
+        };
+        res.send(getUsersResponse);
+      } else {
+        logger.error(err);
+        res.sendStatus(500);
+      }
+    });
   }
 });
 
 router.get('/:user_id', function (req, res) {
   var userId = req.params.user_id;
-  var foundUser = findUserById(userId);
-  var response = {
-    user: foundUser
-  };
-  logger.info(foundUser);
-  res.send(response);
+  userProvider.findById(userId, 'name id profileImage', function (err, user) {
+    if (!err) {
+      var response = {
+        user: user
+      };
+      logger.info({response: response});
+      res.send(response);
+    } else {
+      logger.error(err);
+      res.sendStatus(500);
+    }
+  });
 });
 
 router.post('/', function (req, res) {
   var newUser = req.body.user;
-  logger.info(req.body.user);
-  users.push(newUser);
-  newUserResponse = {
-    user: makeEmberUser(newUser)
-  };
-  res.send(newUserResponse);
+  userProvider.save(newUser, function (err) {
+    if (!err) {
+      logger.info('user saved to mongodb successfully');
+      var newUserResponse = {
+        user: utils.makeEmberUser(newUser)
+      };
+      res.send(newUserResponse);
+    } else {
+      logger.error(err);
+      res.sendStatus(500);
+    }
+  });
 });
 
 module.exports = router;
