@@ -59,7 +59,6 @@ router.get('/:user_id', function (req, res) {
       var response = {
         user: user
       };
-      logger.info({response: response});
       res.send(response);
     } else {
       logger.error(err);

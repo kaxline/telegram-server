@@ -59,4 +59,16 @@ router.post('/', ensureAuthenticated, function (req, res) {
   });
 });
 
+router.delete('/:post_id', function (req, res) {
+  var postId = req.params.post_id;
+  postProvider.deletePost(postId, function (err) {
+    if (!err) {
+      res.sendStatus(200)
+    } else {
+      logger.error(err);
+      res.sendStatus(500);
+    }
+  });
+});
+
 module.exports = router;

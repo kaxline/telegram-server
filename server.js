@@ -1,11 +1,12 @@
-var express = require('express');
-var app = express();
-var bodyParser = require('body-parser');
-var session = require('express-session');
-var cookieParser = require('cookie-parser');
-var logger = require('bunyan').createLogger({name: 'telegram'});
-var passport = require('./auth');
-var db = require('./mongodb');
+var express = require('express')
+  , app = express()
+  , bodyParser = require('body-parser')
+  , session = require('express-session')
+  , cookieParser = require('cookie-parser')
+  , logger = require('bunyan').createLogger({name: 'telegram'})
+  , passport = require('./auth')
+  , db = require('./mongodb')
+  , MongoStore = require('connect-mongo')(session);
 
 app.use(bodyParser.json());
 app.use(cookieParser());
@@ -17,7 +18,10 @@ app.use(
     rolling: true,
     cookie: {
       secure: false
-    }
+    },
+    store: new MongoStore({
+      mongooseConnection: db
+    })
   })
 );
 app.use(passport.initialize());

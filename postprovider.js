@@ -9,6 +9,7 @@ var PostSchema = new Schema({
   , author: String
   , createdAt: Date
   , originalPost: {type: ObjectId, ref: 'Post'}
+  , originalAuthorName: String
 });
 
 mongoose.model('Post', PostSchema);
@@ -44,10 +45,18 @@ PostProvider.prototype.save = function (params, done) {
     , author: params['author']
     , createdAt: params['createdAt']
     , originalPost: params['originalPost']
+    , originalAuthorName: params['originalAuthorName']
   });
   post.save(function (err, savedPost) {
     if (err) done(err);
     done(null, savedPost);
+  });
+};
+
+PostProvider.prototype.deletePost = function (id, done) {
+  Post.remove({_id: id}, function (err) {
+    if (err) return done(err);
+    done(null);
   });
 };
 
