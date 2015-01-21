@@ -1,44 +1,52 @@
-var express = require('express');
-var router = express.Router();
-var logger = require('bunyan').createLogger({name: 'routes/users.js'});
-var passport = require('../../auth');
-var utils = require('../../utils');
-var UserProvider = require('../../userprovider');
-var userProvider = new UserProvider;
+var express = require('express')
+  , router = express.Router()
+  , logger = require('../../log')
+  , passport = require('../../auth')
+  , utils = require('../../utils')
+  , User = require('../../mongodb').model('User')
+  , _ = require('lodash');
+
+function loginWithPassport (req, res, next, user, done) {
+  passport.authenticate('local', function (err, user, info) {
+    logger.info('in passport.authenticate where info: ', info);
+    if (err) {
+      logger.info('in passport.authenticate with err: ', err);
+      res.sendStatus(500);
+      return;
+    }
+    if (!user) {
+      logger.info('in passport.authenticate with !user');
+      res.sendStatus(403);
+      return;
+    }
+    req.login(user, function (err) {
+      if (err) {
+        return next(err)
+      }
+      logger.info('req.user: ', req.user);
+      logger.info('req.isAuthenticated: ', req.isAuthenticated());
+      done();
+    });
+  })(req, res, next);
+}
 
 
 router.get('/', function (req, res, next) {
   var action = req.query.action;
   if (action === 'login') {
-    passport.authenticate('local', function (err, user, info) {
-      logger.info('in passport.authenticate where info: ', info);
-      if (err) {
-        logger.info('in passport.authenticate with err: ', err);
-        res.sendStatus(500);
-        return;
-      }
-      if (!user) {
-        logger.info('in passport.authenticate with !user');
-        res.sendStatus(403);
-        return;
-      }
-      req.login(user, function (err) {
-        if (err) { return next(err) }
-        logger.info('req.user: ', req.user);
-        logger.info('req.isAuthenticated: ', req.isAuthenticated());
-        var loginResponse = {
-          users: [utils.makeEmberUser(user)]
-        };
-        logger.info({loginResponse: loginResponse});
-        res.send(loginResponse);
-      })
-    })(req, res, next);
+    loginWithPassport(req, res, next, user, function () {
+      var loginResponse = {
+        users: [User.toEmber(user)]
+      };
+      logger.info({loginResponse: loginResponse});
+      res.send(loginResponse);
+    });
   } else if (req.query.isAuthenticated === 'true') {
     var isAuthenticatedResponse = {};
-    isAuthenticatedResponse.users = (req.isAuthenticated()) ? [utils.makeEmberUser(req.user)] : [];
+    isAuthenticatedResponse.users = (req.isAuthenticated()) ? [User.toEmber(req.user)] : [];
     res.send(isAuthenticatedResponse);
   } else {
-    userProvider.findAll('name id profileImage', function (err, users) {
+    User.find({}, 'name id profileImage', function (err, users) {
       if (!err) {
         var getUsersResponse = {
           users: users
@@ -54,7 +62,7 @@ router.get('/', function (req, res, next) {
 
 router.get('/:user_id', function (req, res) {
   var userId = req.params.user_id;
-  userProvider.findById(userId, 'name id profileImage', function (err, user) {
+  User.findOne({ id: userId }, 'name id profileImage', function (err, user) {
     if (!err) {
       var response = {
         user: user
@@ -67,15 +75,20 @@ router.get('/:user_id', function (req, res) {
   });
 });
 
-router.post('/', function (req, res) {
+router.post('/', function (req, res, next) {
   var newUser = req.body.user;
-  userProvider.save(newUser, function (err) {
+  var user = new User(_.pick(newUser, ['id', 'name', 'email', 'profileImage', 'password']));
+  user.save(function (err, savedUser) {
     if (!err) {
       logger.info('user saved to mongodb successfully');
-      var newUserResponse = {
-        user: utils.makeEmberUser(newUser)
-      };
-      res.send(newUserResponse);
+      req.body.userId = savedUser.id;
+      req.body.password = savedUser.password;
+      loginWithPassport(req, res, next, savedUser, function () {
+        var newUserResponse = {
+          user: User.toEmber(newUser)
+        };
+        res.send(newUserResponse);
+      });
     } else {
       logger.error(err);
       res.sendStatus(500);

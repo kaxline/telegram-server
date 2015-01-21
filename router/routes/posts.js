@@ -1,15 +1,12 @@
 var express = require('express');
 var router = express.Router();
 var _ = require('lodash');
-var logger = require('bunyan').createLogger({name: 'routes/posts.js'});
-var PostProvider = require('../../postprovider');
-var postProvider = new PostProvider;
+var logger = require('../../log');
+var Post = require('../../mongodb').model('Post');
 var ensureAuthenticated = require('../../utils').ensureAuthenticated;
 
-
-
 router.get('/', function (req, res) {
-  postProvider.findAll('', function (err, posts) {
+  Post.find({}, function (err, posts) {
     if (!err) {
       var response = {
         posts: posts
@@ -25,7 +22,7 @@ router.get('/', function (req, res) {
 router.get('/:post_id', function (req, res) {
   var postId = req.params.post_id;
   logger.info({postId: postId});
-  postProvider.findById(postId, '', function (err, foundPost) {
+  Post.findById(postId, function (err, foundPost) {
     if (!err) {
       var response = {
         post: foundPost
@@ -46,7 +43,9 @@ router.post('/', ensureAuthenticated, function (req, res) {
     res.sendStatus(403);
     return;
   }
-  postProvider.save(newPost, function (err, savedPost) {
+  var post = new Post(_.pick(newPost, ['content', 'author', 'orignalPost', 'originalAuthorName']));
+  post.createdAt = new Date();
+  post.save(function (err, savedPost) {
     if (!err) {
       var newPostResponse = {
         post: savedPost
@@ -59,9 +58,9 @@ router.post('/', ensureAuthenticated, function (req, res) {
   });
 });
 
-router.delete('/:post_id', function (req, res) {
+router.delete('/:post_id', ensureAuthenticated, function (req, res) {
   var postId = req.params.post_id;
-  postProvider.deletePost(postId, function (err) {
+  Post.remove({ _id : postId }, function (err) {
     if (!err) {
       res.sendStatus(200)
     } else {

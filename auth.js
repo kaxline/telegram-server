@@ -1,8 +1,7 @@
-var logger = require('bunyan').createLogger({name: 'auth.js'});
+var logger = require('./log');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
-var UserProvider = require('./userprovider');
-var userProvider = new UserProvider;
+var User = require('./mongodb').model('User');
 
 // START PASSPORT CONFIG
 
@@ -11,7 +10,7 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.deserializeUser(function (id, done) {
-  userProvider.findById(id, '', function (err, user) {
+  User.findOne({ id: id }, function (err, user) {
     if (!err) {
       done(null, user);
     } else {
@@ -27,7 +26,7 @@ passport.use(new LocalStrategy({
   function (username, password, done) {
     logger.info('username: ', username);
     logger.info('password: ', password);
-    userProvider.findById(username, '', function (err, foundUser) {
+    User.findOne({ id: username }, function (err, foundUser) {
       if (!err) {
         if (foundUser.password === password) {
           return done(null, foundUser, {message: 'User found and password matches'});
