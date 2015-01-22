@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var logger = require('../../log');
 var Post = require('../../mongodb').model('Post');
-var ensureAuthenticated = require('../../utils').ensureAuthenticated;
+var ensureAuthenticated = require('../../middleware/ensureAuth');
 
 router.get('/', function (req, res) {
   Post.find({}, function (err, posts) {

@@ -1,12 +1,11 @@
 var express = require('express')
   , router = express.Router()
   , logger = require('../../log')
-  , passport = require('../../auth')
-  , utils = require('../../utils')
+  , passport = require('../../middleware/auth')
   , User = require('../../mongodb').model('User')
   , _ = require('lodash');
 
-function loginWithPassport (req, res, next, user, done) {
+function loginWithPassport (req, res, next, done) {
   passport.authenticate('local', function (err, user, info) {
     logger.info('in passport.authenticate where info: ', info);
     if (err) {
@@ -25,7 +24,7 @@ function loginWithPassport (req, res, next, user, done) {
       }
       logger.info('req.user: ', req.user);
       logger.info('req.isAuthenticated: ', req.isAuthenticated());
-      done();
+      done(user);
     });
   })(req, res, next);
 }
@@ -34,16 +33,15 @@ function loginWithPassport (req, res, next, user, done) {
 router.get('/', function (req, res, next) {
   var action = req.query.action;
   if (action === 'login') {
-    loginWithPassport(req, res, next, user, function () {
+    loginWithPassport(req, res, next, function (user) {
       var loginResponse = {
-        users: [User.toEmber(user)]
+        users: [user.toEmber()]
       };
-      logger.info({loginResponse: loginResponse});
       res.send(loginResponse);
     });
   } else if (req.query.isAuthenticated === 'true') {
     var isAuthenticatedResponse = {};
-    isAuthenticatedResponse.users = (req.isAuthenticated()) ? [User.toEmber(req.user)] : [];
+    isAuthenticatedResponse.users = (req.isAuthenticated()) ? [req.user.toEmber()] : [];
     res.send(isAuthenticatedResponse);
   } else {
     User.find({}, 'name id profileImage', function (err, users) {
@@ -83,9 +81,9 @@ router.post('/', function (req, res, next) {
       logger.info('user saved to mongodb successfully');
       req.body.userId = savedUser.id;
       req.body.password = savedUser.password;
-      loginWithPassport(req, res, next, savedUser, function () {
+      loginWithPassport(req, res, next, function () {
         var newUserResponse = {
-          user: User.toEmber(newUser)
+          user: savedUser.toEmber()
         };
         res.send(newUserResponse);
       });

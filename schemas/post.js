@@ -1,7 +1,6 @@
-var logger = require('../log');
-var mongoose = require('mongoose');
-
-var Schema = mongoose.Schema
+var logger = require('../log')
+  , mongoose = require('mongoose')
+  , Schema = mongoose.Schema
   , ObjectId = Schema.ObjectId;
 
 var postSchema = new Schema({
