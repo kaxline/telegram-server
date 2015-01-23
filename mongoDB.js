@@ -1,10 +1,11 @@
 var logger = require('./log')
   , mongoose = require('mongoose')
   , userSchema = require('./schemas/user')
-  , postSchema = require('./schemas/post');
+  , postSchema = require('./schemas/post')
+  , nconf = require('./config');
 
 
-mongoose.connect('mongodb://localhost/test');
+mongoose.connect(nconf.get('database:host'));
 
 var db = mongoose.connection;
 

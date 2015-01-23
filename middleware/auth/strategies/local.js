@@ -10,17 +10,16 @@ passport.use(new LocalStrategy({
     logger.info('username: ', username);
     logger.info('password: ', password);
     User.findOne({id: username}, function (err, foundUser) {
-      if (!err) {
-        foundUser.comparePassword(password, function (err, isMatch) {
-          if (!err) {
-            return done(null, foundUser, {message: 'User found and password matches'});
-          } else {
-            return done(null, false, {message: 'Invalid password.'})
-          }
-        });
-      } else {
+      if (err) {
         return done(err, false);
       }
+      foundUser.comparePassword(password, function (err, isMatch) {
+        if (err) {
+          return done(null, false, {message: 'Invalid password.'});
+        } else {
+          return done(null, foundUser, {message: 'User found and password matches'});
+        }
+      });
     });
   }
 ));

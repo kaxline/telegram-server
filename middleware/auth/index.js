@@ -8,12 +8,11 @@ passport.serializeUser(function (user, done) {
 
 passport.deserializeUser(function (id, done) {
   User.findOne({id: id}, function (err, user) {
-    if (!err) {
-      done(null, user);
-    } else {
+    if (err) {
       logger.error(err);
-      done(err);
+      return done(err);
     }
+    done(null, user);
   });
 });
 

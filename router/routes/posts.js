@@ -7,15 +7,11 @@ var ensureAuthenticated = require('../../middleware/ensureAuth');
 
 router.get('/', function (req, res) {
   Post.find({}, function (err, posts) {
-    if (!err) {
-      var response = {
-        posts: posts
-      };
-      res.send(response);
-    } else {
+    if (err) {
       logger.error(err);
-      res.sendStatus(500);
+      return res.sendStatus(500);
     }
+    res.send({posts: posts});
   });
 });
 
@@ -23,15 +19,11 @@ router.get('/:post_id', function (req, res) {
   var postId = req.params.post_id;
   logger.info({postId: postId});
   Post.findById(postId, function (err, foundPost) {
-    if (!err) {
-      var response = {
-        post: foundPost
-      };
-      res.send(response);
-    } else {
+    if (err) {
       logger.error(err);
-      res.sendStatus(500);
+      return res.sendStatus(500);
     }
+    res.send({post: foundPost});
   })
 });
 
@@ -40,33 +32,27 @@ router.post('/', ensureAuthenticated, function (req, res) {
   var user = req.user;
   logger.info({newPost: newPost});
   if (user.id !== newPost.author) {
-    res.sendStatus(403);
-    return;
+    return res.sendStatus(403);
   }
   var post = new Post(_.pick(newPost, ['content', 'author', 'orignalPost', 'originalAuthorName']));
   post.createdAt = new Date();
   post.save(function (err, savedPost) {
-    if (!err) {
-      var newPostResponse = {
-        post: savedPost
-      };
-      res.send(newPostResponse);
-    } else {
+    if (err) {
       logger.error(err);
-      res.sendStatus(500);
+      return res.sendStatus(500);
     }
+    res.send({post: savedPost});
   });
 });
 
 router.delete('/:post_id', ensureAuthenticated, function (req, res) {
   var postId = req.params.post_id;
   Post.remove({ _id : postId }, function (err) {
-    if (!err) {
-      res.sendStatus(200)
-    } else {
+    if (err) {
       logger.error(err);
-      res.sendStatus(500);
+      return res.sendStatus(500);
     }
+    res.sendStatus(200);
   });
 });
 

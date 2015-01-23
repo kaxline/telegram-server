@@ -10,13 +10,11 @@ function loginWithPassport (req, res, next, done) {
     logger.info('in passport.authenticate where info: ', info);
     if (err) {
       logger.info('in passport.authenticate with err: ', err);
-      res.sendStatus(500);
-      return;
+      return res.sendStatus(500);
     }
     if (!user) {
       logger.info('in passport.authenticate with !user');
-      res.sendStatus(403);
-      return;
+      return res.sendStatus(403);
     }
     req.login(user, function (err) {
       if (err) {
@@ -34,10 +32,7 @@ router.get('/', function (req, res, next) {
   var action = req.query.action;
   if (action === 'login') {
     loginWithPassport(req, res, next, function (user) {
-      var loginResponse = {
-        users: [user.toEmber()]
-      };
-      res.send(loginResponse);
+      res.send({users: [user.toEmber()]});
     });
   } else if (req.query.isAuthenticated === 'true') {
     var isAuthenticatedResponse = {};
@@ -45,15 +40,11 @@ router.get('/', function (req, res, next) {
     res.send(isAuthenticatedResponse);
   } else {
     User.find({}, 'name id profileImage', function (err, users) {
-      if (!err) {
-        var getUsersResponse = {
-          users: users
-        };
-        res.send(getUsersResponse);
-      } else {
+      if (err) {
         logger.error(err);
-        res.sendStatus(500);
+        return res.sendStatus(500);
       }
+      res.send({users: users});
     });
   }
 });
@@ -61,36 +52,31 @@ router.get('/', function (req, res, next) {
 router.get('/:user_id', function (req, res) {
   var userId = req.params.user_id;
   User.findOne({ id: userId }, 'name id profileImage', function (err, user) {
-    if (!err) {
-      var response = {
-        user: user
-      };
-      res.send(response);
-    } else {
+    if (err) {
       logger.error(err);
-      res.sendStatus(500);
+      return res.sendStatus(500);
     }
+    res.send({user: user});
   });
 });
+
 
 router.post('/', function (req, res, next) {
   var newUser = req.body.user;
   var user = new User(_.pick(newUser, ['id', 'name', 'email', 'profileImage', 'password']));
   user.save(function (err, savedUser) {
-    if (!err) {
-      logger.info('user saved to mongodb successfully');
-      req.body.userId = savedUser.id;
-      req.body.password = savedUser.password;
-      loginWithPassport(req, res, next, function () {
-        var newUserResponse = {
-          user: savedUser.toEmber()
-        };
-        res.send(newUserResponse);
-      });
-    } else {
+    if (err) {
       logger.error(err);
-      res.sendStatus(500);
+      return res.sendStatus(500);
     }
+    logger.info('user saved to mongodb successfully');
+    req.login(savedUser, function (err) {
+      if (err) {
+        logger.error(err);
+        return res.sendStatus(500);
+      }
+      res.send({user: savedUser.toEmber()});
+    });
   });
 });
 
