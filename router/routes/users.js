@@ -29,12 +29,7 @@ function loginWithPassport (req, res, next, done) {
 
 
 router.get('/', function (req, res, next) {
-  var action = req.query.action;
-  if (action === 'login') {
-    loginWithPassport(req, res, next, function (user) {
-      res.send({users: [user.toEmber()]});
-    });
-  } else if (req.query.isAuthenticated === 'true') {
+  if (req.query.isAuthenticated === 'true') {
     var isAuthenticatedResponse = {};
     isAuthenticatedResponse.users = (req.isAuthenticated()) ? [req.user.toEmber()] : [];
     res.send(isAuthenticatedResponse);
@@ -62,22 +57,33 @@ router.get('/:user_id', function (req, res) {
 
 
 router.post('/', function (req, res, next) {
-  var newUser = req.body.user;
-  var user = new User(_.pick(newUser, ['id', 'name', 'email', 'profileImage', 'password']));
-  user.save(function (err, savedUser) {
-    if (err) {
-      logger.error(err);
-      return res.sendStatus(500);
-    }
-    logger.info('user saved to mongodb successfully');
-    req.login(savedUser, function (err) {
+  var user = req.body.user;
+  var meta = user.meta;
+  var operation = meta.operation;
+  if (operation && operation === 'login') {
+    req.body.username = user.id;
+    req.body.password = meta.password;
+    loginWithPassport(req, res, next, function (user) {
+      res.send({users: [user.toEmber()]});
+    });
+  } else {
+    var newUser = new User(_.pick(user, ['id', 'name', 'email', 'profileImage']));
+    newUser.password = meta.password;
+    newUser.save(function (err, savedUser) {
       if (err) {
         logger.error(err);
         return res.sendStatus(500);
       }
-      res.send({user: savedUser.toEmber()});
+      logger.info('user saved to mongodb successfully');
+      req.login(savedUser, function (err) {
+        if (err) {
+          logger.error(err);
+          return res.sendStatus(500);
+        }
+        res.send({user: savedUser.toEmber()});
+      });
     });
-  });
+  }
 });
 
 module.exports = router;

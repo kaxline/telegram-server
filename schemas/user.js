@@ -1,4 +1,5 @@
 var mongoose = require('mongoose')
+  , logger = require('../log')
   , _ = require('lodash')
   , Schema = mongoose.Schema
   , ObjectId = Schema.ObjectId
@@ -18,6 +19,8 @@ userSchema.methods.toEmber = function () {
 };
 
 userSchema.methods.comparePassword = function (submittedPassword, done) {
+  logger.info({user: this});
+  logger.info('database password: ', this.password);
   bcrypt.compare(submittedPassword, this.password, function (err, isMatch) {
     if (err) return done(err);
     done(null, isMatch);
