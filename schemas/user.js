@@ -3,8 +3,7 @@ var mongoose = require('mongoose')
   , _ = require('lodash')
   , Schema = mongoose.Schema
   , ObjectId = Schema.ObjectId
-  , bcrypt = require('bcrypt')
-  , SALT_WORK_FACTOR = 10;
+  , bcrypt = require('bcrypt');
 
 var userSchema = new Schema({
     id: String
@@ -12,6 +11,7 @@ var userSchema = new Schema({
   , email: String
   , profileImage: String
   , password: String
+  , followers: [{type: ObjectId, ref: 'User'}]
 });
 
 userSchema.methods.toEmber = function () {

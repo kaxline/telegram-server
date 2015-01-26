@@ -8,7 +8,8 @@ var express = require('express')
   , domain = 'sandbox1772126ce30d4f1aa2291380e6b387ab.mailgun.org'
   , mailgun = require('mailgun-js')({apiKey: api_key, domain: domain})
   , Handlebars = require('handlebars')
-  , generatePassword = require('password-generator');
+  , generatePassword = require('password-generator')
+  , ensureAuthenticated = require('../../middleware/ensureAuth');
 
 var emailSource = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"><body> <p>Hey there,</p> <p>Your new password is {{password}}.</p> <br/> <p>All the best,</p> <p>The Telegram App Team</p> </body> </html>";
 
@@ -76,7 +77,22 @@ function resetPassword (req, res) {
 }
 
 router.get('/', function (req, res, next) {
-  if (req.query.isAuthenticated === 'true') {
+  var followQuery = req.query.follows;
+  if (followQuery) {
+    if (!req.user) {
+      return res.sendStatus(403);
+    }
+    User.find({id: followQuery})
+      .where('followers').in([req.user._id])
+      .exec(function (err, foundUser) {
+        if (err) {
+          logger.error(err);
+          return res.sendStatus(500);
+        }
+        logger.info({foundUser: foundUser});
+        return res.send({users: [foundUser[0].toEmber()]});
+      });
+  } else if (req.query.isAuthenticated === 'true') {
     var isAuthenticatedResponse = {};
     isAuthenticatedResponse.users = (req.isAuthenticated()) ? [req.user.toEmber()] : [];
     res.send(isAuthenticatedResponse);
@@ -93,12 +109,35 @@ router.get('/', function (req, res, next) {
 
 router.get('/:user_id', function (req, res) {
   var userId = req.params.user_id;
+  logger.info({body: req.body});
   User.findOne({ id: userId }, 'name id profileImage', function (err, user) {
     if (err) {
       logger.error(err);
       return res.sendStatus(500);
     }
+    if (!user) {
+      logger.info('No user found with id:', userId);
+      return res.sendStatus(404);
+    }
     res.send({user: user});
+  });
+});
+
+router.put('/:user_id', ensureAuthenticated, function (req, res, next) {
+  var userId = req.params.user_id;
+  User.findOne({id: userId}, function (err, foundUser) {
+    if (err) {
+      logger.error(err);
+      return res.sendStatus(500);
+    }
+    foundUser.followers.push(req.user._id);
+    foundUser.save(function (err, saveduser) {
+      if (err) {
+        logger.error(err);
+        return res.sendStatus(500);
+      }
+      res.send({user: saveduser.toEmber()});
+    });
   });
 });
 
