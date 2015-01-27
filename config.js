@@ -3,8 +3,6 @@ var nconf = require('nconf')
 
 nconf.env();
 
-console.log(path.join(__dirname, 'config/config-dev.json'));
-
 if (nconf.get('NODE_ENV') == 'production') {
   nconf.file({
     file: path.join(__dirname, 'config/config-prod.json')

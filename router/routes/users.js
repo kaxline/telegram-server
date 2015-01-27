@@ -4,16 +4,11 @@ var express = require('express')
   , passport = require('../../middleware/auth')
   , User = require('../../mongodb').model('User')
   , _ = require('lodash')
-  , api_key = 'key-cc4ec9a29199453aa66ccf1637a04f0f'
-  , domain = 'sandbox1772126ce30d4f1aa2291380e6b387ab.mailgun.org'
-  , mailgun = require('mailgun-js')({apiKey: api_key, domain: domain})
-  , Handlebars = require('handlebars')
-  , generatePassword = require('password-generator')
+  , sendPasswordResetEmail = require('../../utils/email')
   , ensureAuthenticated = require('../../middleware/ensureAuth');
 
-var emailSource = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"><body> <p>Hey there,</p> <p>Your new password is {{password}}.</p> <br/> <p>All the best,</p> <p>The Telegram App Team</p> </body> </html>";
 
-var template = Handlebars.compile(emailSource);
+
 
 function loginWithPassport (req, res, next, done) {
   passport.authenticate('local', function (err, user, info) {
@@ -35,45 +30,6 @@ function loginWithPassport (req, res, next, done) {
       done(user);
     });
   })(req, res, next);
-}
-
-function resetPassword (req, res) {
-  var email = req.body.user.email;
-  User.findOne({email: email}, function (err, foundUser) {
-    if (err) {
-      logger.error(err)
-      return res.sendStatus(500);
-    }
-    if (!foundUser) {
-      return res.sendStatus(500);
-    }
-    logger.info({foundUser: foundUser});
-    var newPassword = generatePassword(12, false);
-    foundUser.password = newPassword;
-    foundUser.save(function (err, savedUser) {
-      if (err) {
-        logger.error(err);
-        return res.sendStatus(500);
-      }
-      var emailHTML = template({password: newPassword});
-      var emailText = 'Hey there, Your new password is ' + newPassword + '. All the best, The Telegram App Team';
-      logger.info(emailText);
-      var data = {
-        from: 'Telegram <postmaster@sandbox1772126ce30d4f1aa2291380e6b387ab.mailgun.org>'
-        , to: email
-        , subject: 'Your password has been reset'
-        , text: emailText
-        , html: emailHTML
-      };
-      mailgun.messages().send(data, function (err, body) {
-        if (err) {
-          logger.error(err);
-          return res.sendStatus(500)
-        }
-        res.send({user: savedUser});
-      });
-    });
-  });
 }
 
 router.get('/', function (req, res, next) {
@@ -153,7 +109,7 @@ router.post('/', function (req, res, next) {
       res.send({users: [user.toEmber()]});
     });
   } else if (operation && operation === 'reset-password') {
-    resetPassword(req, res);
+    sendPasswordResetEmail(req, res);
   } else {
     var newUser = new User(_.pick(user, ['id', 'name', 'email', 'profileImage']));
     newUser.password = meta.password;

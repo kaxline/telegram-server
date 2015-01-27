@@ -1,6 +1,8 @@
 var passport = require('passport')
   , logger = require('../../log')
-  , User = require('../../mongodb').model('User');
+  , User = require('../../mongodb').model('User')
+  , local = require('./strategies/local')
+  , Strategy = require('passport-local').Strategy;
 
 passport.serializeUser(function (user, done) {
   done(null, user.id);
@@ -16,6 +18,6 @@ passport.deserializeUser(function (id, done) {
   });
 });
 
-require('./strategies/local');
+passport.use(new Strategy(local.options, local.verify));
 
 module.exports = passport;

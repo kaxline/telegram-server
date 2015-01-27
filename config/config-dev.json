@@ -4,5 +4,9 @@
   },
   "server": {
     "port": 3000
+  },
+  "mailgun": {
+    "api_key": "key-cc4ec9a29199453aa66ccf1637a04f0f",
+    "domain": "sandbox1772126ce30d4f1aa2291380e6b387ab.mailgun.org"
   }
 }

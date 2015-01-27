@@ -27,6 +27,21 @@ userSchema.methods.comparePassword = function (submittedPassword, done) {
   })
 };
 
+userSchema.statics.matchUser = function (id, password, done) {
+  this.findOne({id: id}, function (err, foundUser) {
+    if (err) {
+      return done(err, false);
+    }
+    foundUser.comparePassword(password, function (err, isMatch) {
+      if (err || !isMatch) {
+        return done(err, false, {message: 'Invalid password.'});
+      } else {
+        return done(null, foundUser, {message: 'User found and password matches'});
+      }
+    });
+  });
+};
+
 userSchema.pre('save', function (next) {
   var user = this;
 
