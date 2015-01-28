@@ -61,10 +61,16 @@ module.exports = {
   },
 
   unfollowUser: function (req, res) {
-    var userId = req.params.user_id;
-    logger.info('in unfollowUser');
-    res.sendStatus(404);
+    var user = req.user
+      , userId = req.params.user_id;
+    user.unfollow(userId, function (err, savedSelf, savedUser) {
+      if (err) {
+        logger.error(err);
+        return res.sendStatus(500);
+      }
+      return res.send({user: savedUser.toEmber()});
+    });
   }
 
-}
+};
 

@@ -45,6 +45,23 @@ userSchema.methods.follow = function (userId, done) {
   });
 };
 
+userSchema.methods.unfollow = function (userId, done) {
+  var self = this;
+  self.model('User').findOne({id: userId}, function (err, foundUser) {
+    if (err) return done(err);
+    if (!foundUser) return done({error: 'No user found.'});
+    foundUser.followers.pull(self._id);
+    foundUser.save(function (err, savedUser) {
+      if (err) return done(err);
+      self.follows.pull(savedUser._id);
+      self.save(function (err, savedSelf) {
+        if (err) return done(err);
+        return done(null, savedSelf, savedUser);
+      });
+    });
+  })
+};
+
 userSchema.statics.matchUser = function (id, password, done) {
   this.findOne({id: id}, function (err, foundUser) {
     if (err) {
