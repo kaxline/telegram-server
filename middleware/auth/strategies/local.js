@@ -1,6 +1,6 @@
 var logger = require('../../../log');
 var User = require('../../../mongodb').model('User');
-var LocalStrategy = {};
+var LocalStrategy = exports;
 
 LocalStrategy.options = {
     usernameField: 'user[id]'
@@ -12,5 +12,3 @@ LocalStrategy.verify = function (id, password, done) {
   logger.info('submitted password: ', password);
   User.matchUser(id, password, done);
 };
-
-module.exports = LocalStrategy;

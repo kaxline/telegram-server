@@ -12,6 +12,7 @@ var userSchema = new Schema({
   , profileImage: String
   , password: String
   , followers: [{type: ObjectId, ref: 'User'}]
+  , follows: [{type: ObjectId, ref: 'User'}]
 });
 
 userSchema.methods.toEmber = function () {
@@ -25,6 +26,23 @@ userSchema.methods.comparePassword = function (submittedPassword, done) {
     if (err) return done(err);
     done(null, isMatch);
   })
+};
+
+userSchema.methods.follow = function (userId, done) {
+  var self = this;
+  self.model('User').findOne({id: userId}, function (err, foundUser) {
+    if (err) return done(err);
+    if (!foundUser) return done({error: 'No user found.'});
+    foundUser.followers.addToSet(self._id);
+    foundUser.save(function (err, savedUser) {
+      if (err) return done(err);
+      self.follows.addToSet(savedUser._id);
+      self.save(function (err, savedSelf) {
+        if (err) return done(err);
+        return done(null, savedSelf, savedUser);
+      });
+    });
+  });
 };
 
 userSchema.statics.matchUser = function (id, password, done) {

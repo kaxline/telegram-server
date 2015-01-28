@@ -8,8 +8,4 @@ module.exports = function (app) {
 
   app.use('/api/posts', require('./routes/posts'));
 
-  // ADMIN
-
-  app.use('/api/admin', require('./routes/admin'));
-
 };
