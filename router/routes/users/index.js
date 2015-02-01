@@ -5,15 +5,17 @@ var express = require('express')
   , ensureAuthenticated = require('../../../middleware/ensureAuth');
 
 router.get('/', function (req, res) {
-  var followQuery = req.query.follows
-    , isAuthenticatedQuery = req.query.isAuthenticated;
+  var operation = req.query.operation;
 
-  if (followQuery) {
-    return graph.doesUserFollow(req, res, followQuery);
-  } else if (isAuthenticatedQuery === 'true') {
-    return account.isUserAuthenticated(req, res);
-  } else {
-    return graph.findAllUsers(req, res);
+  switch (operation) {
+    case 'isAuthenticated':
+      return account.isUserAuthenticated(req, res);
+    case 'followers':
+      return graph.findFollowers(req, res);
+    case 'following':
+      return graph.findFollowing(req, res);
+    default:
+      graph.findAllUsers(req, res);
   }
 
 });

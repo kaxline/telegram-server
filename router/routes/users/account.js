@@ -1,4 +1,4 @@
-var sendPasswordResetEmail = require('../../../utils/email')
+var sendPasswordResetEmail = require('../../../utils/email').sendPasswordResetEmail
   , passport = require('passport')
   , User = require('../../../mongodb').model('User')
   , _ = require('lodash')
@@ -60,7 +60,28 @@ module.exports = {
   },
 
   resetPassword: function (req, res) {
-    sendPasswordResetEmail(req, res);
+    var user = req.body.user;
+    User.findOne({email: user.email}, function (err, foundUser) {
+      if (err) {
+        logger.error(err)
+        return res.sendStatus(500);
+      }
+      if (!foundUser) {
+        return res.sendStatus(500);
+      }
+      foundUser.resetPassword(function (err, plainTextPassword) {
+        if (err) {
+          logger.error(err)
+          return res.sendStatus(500);
+        }
+        sendPasswordResetEmail(user, plainTextPassword, function (err, body) {
+          if (err) {
+            logger.error(err);
+            return res.sendStatus(500)
+          }
+          res.send({user: foundUser});
+        });
+      });
+    });
   }
-
 };
