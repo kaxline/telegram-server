@@ -1,6 +1,6 @@
 var passport = require('passport')
   , logger = require('../../log')
-  , User = require('../../mongodb').model('User')
+  , User = require('../../mongoDB').model('User')
   , local = require('./strategies/local')
   , Strategy = require('passport-local').Strategy;
 
