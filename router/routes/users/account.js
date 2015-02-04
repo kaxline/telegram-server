@@ -67,7 +67,7 @@ module.exports = {
         return res.sendStatus(500);
       }
       if (!foundUser) {
-        return res.sendStatus(500);
+        return res.sendStatus(404);
       }
       foundUser.resetPassword(function (err, plainTextPassword) {
         if (err) {

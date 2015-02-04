@@ -1,6 +1,6 @@
-var logger = require('../../../log');
-var User = require('../../../mongodb').model('User');
-var LocalStrategy = exports;
+var logger = require('../../../log')
+  , User = require('../../../mongodb').model('User')
+  , LocalStrategy = exports;
 
 LocalStrategy.options = {
     usernameField: 'user[id]'

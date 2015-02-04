@@ -6,11 +6,12 @@ var fs = require('fs')
   , domain = nconf.get('mailgun:domain')
   , mailgun = require('mailgun-js')({apiKey: api_key, domain: domain})
   , Handlebars = require('handlebars')
-  , email = exports;
+  , email = exports
+  , path = require('path');
 
-var emailHTMLSource = fs.readFileSync(__dirname + '/../templates/password-reset-html.hbs').toString();
+var emailHTMLSource = fs.readFileSync(path.join(__dirname, '/../templates/password-reset-html.hbs')).toString();
 
-var emailTextSource = fs.readFileSync(__dirname + '/../templates/password-reset-text.hbs').toString();
+var emailTextSource = fs.readFileSync(path.join(__dirname, '/../templates/password-reset-text.hbs')).toString();
 
 var templateHTML = Handlebars.compile(emailHTMLSource);
 

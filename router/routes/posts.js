@@ -6,49 +6,55 @@ var express = require('express')
   , User = require('../../mongodb').model('User')
   , ensureAuthenticated = require('../../middleware/ensureAuth');
 
+function getPostsByAuthor (req, res) {
+  var author = req.query.author;
+  Post.find({author: author}, function (err, foundPosts) {
+    if (err) {
+      logger.error(err);
+      res.sendStatus(500);
+    }
+    return res.send({posts: foundPosts});
+  });
+}
+
+function getStreamPosts (req, res) {
+  if (!req.isAuthenticated()) {
+    return res.sendStatus(403);
+  }
+  var requestUser = req.user;
+  User.find({})
+    .where('followers').in([requestUser._id])
+    .exec(function (err, foundUsers) {
+      if (err) return logger.error(err);
+      var foundUsersIds = _.pluck(foundUsers, 'id');
+      foundUsersIds.push(requestUser.get('id'));
+      Post.find({})
+        .where('author').in(foundUsersIds)
+        .exec(function (err, foundPosts) {
+          if (err) return logger.error(err);
+          var usersResponse = _.map(foundUsers, function (user) {
+            return user.toEmber(requestUser);
+          });
+          res.send({
+            posts: foundPosts,
+            users: usersResponse
+          });
+        });
+    });
+}
+
 router.get('/', function (req, res) {
-  var user = req.user,
-    operation = req.query.operation;
+  var operation = req.query.operation;
 
   switch(operation) {
     case 'byAuthor':
-      var author = req.query.author;
-      Post.find({})
-        .where('author').in([author])
-        .exec(function (err, foundPosts) {
-          if (err) {
-            logger.error(err);
-            res.sendStatus(500);
-          }
-          return res.send({posts: foundPosts});
-        });
+      getPostsByAuthor(req, res);
       break;
     case 'fromFollowers':
-      User.find({})
-        .where('followers').in([user._id])
-        .exec(function (err, foundUsers) {
-          if (err) return logger.error(err);
-          var foundUsersIds = _.pluck(foundUsers, 'id');
-          foundUsersIds.push(user.get('id'));
-          Post.find({})
-            .where('author').in(foundUsersIds)
-            .exec(function (err, foundPosts) {
-              if (err) return logger.error(err);
-              res.send({
-                posts: foundPosts,
-                users: foundUsers
-              });
-            });
-        });
+      getStreamPosts(req, res);
       break;
     default:
-      Post.find({}, function (err, posts) {
-        if (err) {
-          logger.error(err);
-          return res.sendStatus(500);
-        }
-        res.send({posts: posts});
-      });
+      res.sendStatus(403);
   }
 
 });
@@ -72,7 +78,7 @@ router.post('/', ensureAuthenticated, function (req, res) {
   if (user.id !== newPost.author) {
     return res.sendStatus(403);
   }
-  var post = new Post(_.pick(newPost, ['content', 'author', 'orignalPost', 'originalAuthorName']));
+  var post = new Post(_.pick(newPost, ['content', 'author', 'originalPost', 'originalAuthorName']));
   post.createdAt = new Date();
   post.save(function (err, savedPost) {
     if (err) {

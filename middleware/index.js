@@ -11,9 +11,8 @@ function configureSession (session) {
     secret: 'yachtcopter',
     resave: false,
     saveUninitialized: false,
-    rolling: true,
     cookie: {
-      secure: false
+      maxAge: 60*60*24*30
     },
     store: new MongoStore({
       mongooseConnection: db

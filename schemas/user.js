@@ -22,9 +22,8 @@ userSchema.methods.toEmber = function (loggedInUser) {
     logger.info('requesting user follows queried user.');
     selfJSON.isFollowed = true;
   }
-  var toEmberResponse = _.omit(selfJSON, ['password', 'email']);
-  logger.info({toEmberResponse: toEmberResponse});
-  return toEmberResponse;
+  var emberUser = _.pick(selfJSON, ['id', 'name', 'profileImage', '_id']);
+  return emberUser;
 };
 
 userSchema.methods.comparePassword = function (submittedPassword, done) {
@@ -40,7 +39,7 @@ userSchema.methods.follow = function (userId, done) {
   var self = this;
   self.model('User').findOneAndUpdate({id: userId}, {$addToSet: {followers: self._id}}, function (err, foundUser) {
     if (err) return done(err);
-    if (!foundUser) return done({error: 'No user found.'});
+    if (!foundUser) return done(new Error('No user found.'));
     return done(null, foundUser);
   });
 };
@@ -49,7 +48,7 @@ userSchema.methods.unfollow = function (userId, done) {
   var self = this;
   self.model('User').findOneAndUpdate({id: userId}, {$pull: {followers: self._id}}, function (err, foundUser) {
     if (err) return done(err);
-    if (!foundUser) return done({error: 'No user found.'});
+    if (!foundUser) return done(new Error('No user found.'));
     return done(null, foundUser);
   });
 };
