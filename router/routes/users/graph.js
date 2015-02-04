@@ -1,4 +1,4 @@
-var User = require('../../../mongodb').model('User')
+var User = require('../../../mongoDB').model('User')
   , _ = require('lodash')
   , logger = require('../../../log');
 

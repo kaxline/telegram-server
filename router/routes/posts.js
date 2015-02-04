@@ -2,8 +2,8 @@ var express = require('express')
   , router = express.Router()
   , _ = require('lodash')
   , logger = require('../../log')
-  , Post = require('../../mongodb').model('Post')
-  , User = require('../../mongodb').model('User')
+  , Post = require('../../mongoDB').model('Post')
+  , User = require('../../mongoDB').model('User')
   , ensureAuthenticated = require('../../middleware/ensureAuth');
 
 function getPostsByAuthor (req, res) {

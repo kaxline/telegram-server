@@ -1,5 +1,5 @@
 var logger = require('../../../log')
-  , User = require('../../../mongodb').model('User')
+  , User = require('../../../mongoDB').model('User')
   , LocalStrategy = exports;
 
 LocalStrategy.options = {

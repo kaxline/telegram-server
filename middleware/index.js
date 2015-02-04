@@ -3,7 +3,7 @@ var bodyParser = require('body-parser')
   , cookieParser = require('cookie-parser')
   , logger = require('../log')
   , passport = require('./auth')
-  , db = require('../mongodb')
+  , db = require('../mongoDB')
   , MongoStore = require('connect-mongo')(session);
 
 function configureSession (session) {

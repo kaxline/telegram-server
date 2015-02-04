@@ -1,6 +1,6 @@
 var sendPasswordResetEmail = require('../../../utils/email').sendPasswordResetEmail
   , passport = require('passport')
-  , User = require('../../../mongodb').model('User')
+  , User = require('../../../mongoDB').model('User')
   , _ = require('lodash')
   , logger = require('../../../log');
 

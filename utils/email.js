@@ -1,6 +1,6 @@
 var fs = require('fs')
   , logger = require('../log')
-  , User = require('../mongodb').model('User')
+  , User = require('../mongoDB').model('User')
   , nconf = require('../config')
   , api_key = nconf.get('mailgun:api_key')
   , domain = nconf.get('mailgun:domain')
