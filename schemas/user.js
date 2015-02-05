@@ -22,7 +22,7 @@ userSchema.methods.toEmber = function (loggedInUser) {
     logger.info('requesting user follows queried user.');
     selfJSON.isFollowed = true;
   }
-  var emberUser = _.pick(selfJSON, ['id', 'name', 'profileImage', '_id']);
+  var emberUser = _.pick(selfJSON, ['id', 'name', 'profileImage', '_id', 'isFollowed']);
   return emberUser;
 };
 
